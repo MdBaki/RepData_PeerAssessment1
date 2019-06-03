@@ -16,8 +16,6 @@ stepsbyday <- aggregate(steps ~ date, fitnessdata, FUN = sum, na.rm=TRUE)
 
 hist(stepsbyday$steps, xlab = "Total daily Steps",main="Histogram of Total Steps by day", breaks = 20)
 
-![](PA_templetsFigures/Calculate the total number of steps taken per day; Make a histogram of the total number of steps taken each day-1
-
 
 head(stepsbyday)
 ##         date steps
