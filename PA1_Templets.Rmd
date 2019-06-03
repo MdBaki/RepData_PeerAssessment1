@@ -1,0 +1,91 @@
+---
+title: "PA1_Templets"
+author: "baki"
+date: "6/2/2019"
+output: html_document
+---
+
+---
+title: "ReproducibleResearchProject1v2"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Reproducible Research Course Project 1 (Week 2)
+
+## Loading and preprocessing the data
+```{r Question 1}
+fitnessdata <- read.csv("activity.csv", header = TRUE)
+head(fitnessdata)
+```
+
+## What is mean total number of steps taken per day?
+### Calculate the total number of steps taken per day
+### Make a histogram of the total number of steps taken each day
+```{r Calculate the total number of steps taken per day; Make a histogram of the total number of steps taken each day}
+stepsbyday <- aggregate(steps ~ date, fitnessdata, FUN = sum, na.rm=TRUE)
+hist(stepsbyday$steps, xlab = "Total daily Steps",main="Histogram of Total Steps by day", breaks = 20)
+head(stepsbyday)
+```
+
+### Calculate and report the mean and median of the total number of steps taken per day
+```{r Calculate and report the mean and median of the total number of steps taken per day}
+print(mean(stepsbyday$steps))
+print(median(stepsbyday$steps))
+```
+
+## What is the average daily activity pattern?
+```{r avg active daily pattern}
+#Make a time series plot (i.e. \color{red}{\verb|type = "l"|}type="l") of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all days (y-axis)
+library(ggplot2)
+stepsbyinterval <- aggregate(steps ~ interval, fitnessdata, FUN = mean, na.rm=TRUE)
+ggplot(stepsbyinterval, aes(x=interval, y=steps))+ geom_line()
+```
+
+```{r max interval}
+#Which 5-minute interval, on average across all the days in the dataset, contains the maximum number of steps?
+stepsbyinterval[which(stepsbyinterval$steps== max(stepsbyinterval$steps)),]
+```
+
+## Imputing missing values
+```{r  hist with NA mean filled}
+fitnessdata_filled <- fitnessdata
+nrow(fitnessdata_filled[is.na(fitnessdata_filled$steps),])
+fitnessdata_narm <- fitnessdata_filled[!is.na(fitnessdata_filled$steps),]
+missingData <- is.na(fitnessdata_filled$steps)
+meanVals <- tapply(fitnessdata_narm$steps, fitnessdata_narm$interval, mean, na.rm=TRUE, simplify=TRUE)
+fitnessdata_filled$steps[missingData] <- meanVals[as.character(fitnessdata_filled$interval[missingData])]
+head(fitnessdata_filled)
+write.csv(fitnessdata_filled, file = "activity_filled.csv")
+stepsbyday_filled <- aggregate(steps ~ date, fitnessdata_filled, FUN = sum, na.rm=TRUE)
+hist(stepsbyday_filled$steps, xlab = "Total daily Steps",main="Histogram of Total Steps by day (NA Mean Filled)", breaks = 20)
+```
+
+## Are there differences in activity patterns between weekdays and weekends?
+#### 1 of 3
+```{r weekday vs weekend 1 of 3}
+# Create a new factor variable in the dataset with two levels - "weekday" and "weekend" indicating whether a given date is a weekday or weekend day. 
+mean(stepsbyday$steps)
+mean(stepsbyday_filled$steps)
+median(stepsbyday$steps)
+median(stepsbyday_filled$steps)
+```
+
+#### 2 of 3
+```{r  weekday vs weekend 2 of 3}
+#head(as.Date(stepsbyday_filled$date))
+fitnessdata_filled$weekday <- weekdays(as.Date(fitnessdata_filled$date))
+fitnessdata_filled$weekend <- ifelse (fitnessdata_filled$weekday == "Saturday" | fitnessdata_filled$weekday == "Sunday", "Weekend", "Weekday")
+head(fitnessdata_filled,7)
+```
+
+#### 3 of 3
+```{r weekday vs weekend 3 of 3}
+weekendagg <- aggregate(steps ~ weekend + interval, fitnessdata_filled, FUN = mean)
+names(weekendagg) <- c("weekend", "interval", "steps")
+ggplot(weekendagg, aes(x = interval, y=steps, color=weekend)) + geom_line() + facet_grid(weekend ~ .)
+```
+# End
